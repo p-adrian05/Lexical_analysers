@@ -17,6 +17,6 @@ public:
 	}
 
 	std::string toString() {
-		return token + "==" + lexema;
+		return token +  " == " + lexema;
 	}
 };
