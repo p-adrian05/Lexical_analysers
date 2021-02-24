@@ -3,31 +3,44 @@
 #include <iostream>
 #include "Analyzer.cpp"
 
-void printResult(std::vector<TableRow> resultTable) {
-	std::cout << "Result: " << std::endl;
-	for (int i = 0; i < resultTable.size(); i++) {
-		std::cout << resultTable[i].toString() << std::endl;
+void printResult(std::vector<TableRow> table) {
+	std::cout << "Eredmeny: " << std::endl;
+	for (int i = 0; i < table.size(); i++) {
+		std::cout << table[i].getToken();
 	}
-	std::cout << "\n" << std::endl;
+	std::cout << "\n " << std::endl;
+	
+}
+
+void printErrors(std::vector<TableRow> table) {
+	std::cout << "Hibak: " << std::endl;
+	for (int i = 0; i < table.size(); i++) {
+		std::cout << table[i].toString();
+	}
+	std::cout << "\n " << std::endl;
+
 }
 
 int main()
 {
-	 std::string inputString ="asd:=23(*sdds*){asd}ad<=23<>ass";
+	 std::string inputString ="antal12<>12antal{komment}:=12(*komment2*)23>=antal<=12";
 	 Analyzer analyzer;
 	 analyzer.analyze(std::string(inputString));
 
-	 std::cout << "Sample input: "+ inputString << std::endl;
-	 std::vector<TableRow> resultTable = analyzer.getResultTable();
+	 std::cout << "Minta input:  "+ inputString << std::endl;
 	 printResult(analyzer.getResultTable());
-
+	 if (analyzer.getErrorTable().size() != 0) {
+		 printErrors(analyzer.getErrorTable());
+	 }
 
 	 while (true) {
-		 std::cout << "Type input string: " << std::endl;
-		 cin >> inputString;
+		 std::cout << "Adjon meg egy stringet! " << std::endl;
+		 getline(cin, inputString);
 		 analyzer.analyze(std::string(inputString));
-		 std::vector<TableRow> resultTable = analyzer.getResultTable();
 		 printResult(analyzer.getResultTable());
+		 if (analyzer.getErrorTable().size() != 0) {
+			 printErrors(analyzer.getErrorTable());
+		 }
 	 }
 	 
 }

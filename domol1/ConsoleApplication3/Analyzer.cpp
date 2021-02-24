@@ -8,54 +8,54 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <string>
-#include <functional>
 using namespace std;
 
 class Analyzer
 {
 private:
-    const std::vector<char> specialCharacters = { '{', '}', '(', '*', ')', ':', '=', '<', '>' };
+    const std::vector<char> specialCharacters = { '{', '}', '(', '*', ')', ':', '=', '<', '>', };
     std::vector<TableRow> resultTable;
+    std::vector<TableRow> errorTable;
 
 public:
     Analyzer() {
         initState();
     }
 
-   
-
     void analyze(const std::string& input) {
         initState();
         int statePosition = 1;
         int index = 0;
         do {
+           
+            while (isspace(input.at(index))) {
+                index++;
+            }
             if (isIndexOutOfRange(index, input)) {
                 statePosition = 21;
             }
-            else if (statePosition==1) {
-                
+            if (statePosition==1) {
                  statePosition = calculcateStatePosition(input.at(index));
+            }
+            if (statePosition == 21) {
+                return;
             }
            
             
             switch (statePosition) {
             case 2: {
-                /*
-                Read input and build azonosito
-                * */
+               
                 std::string lexema = "";
-                while (!isIndexOutOfRange(index,input) && isLetter(input.at(index))) {
+                while (!isIndexOutOfRange(index,input) && isLetterOrDigit(input.at(index))){
                     lexema += input.at(index);
                     index++;
                 }
                 statePosition = 1;
-                resultTable.push_back(TableRow(std::string("azonosito"), lexema));
+                resultTable.push_back(TableRow(std::string("<azonosito>"), lexema));
                 break;
             }
             case 4: {
-                /*
-                Read input and build szam
-                * */
+               
                 std::string lexema = "";
                 while (!isIndexOutOfRange(index,input) && isdigit(input.at(index))) {
                     lexema += input.at(index);
@@ -63,13 +63,11 @@ public:
                 }
                 statePosition = 1;
 
-                resultTable.push_back(TableRow(std::string("szam"), lexema));
+                resultTable.push_back(TableRow(std::string("<konstans>"), lexema));
                 break;
             }
             case 6: {
-                /*
-                Read input and build {} komment
-                * */
+              
                 std::string lexema = "";
                 index++;
                 while (!isIndexOutOfRange(index, input) && input.at(index) != '}') {
@@ -79,14 +77,11 @@ public:
                 statePosition = 1;
                 index++;
 
-                resultTable.push_back(TableRow(std::string("{} komment"), lexema));
+                resultTable.push_back(TableRow(std::string("<{}kommentar>"), lexema));
                 break;
             }
             case 8: {
-                /*
-                Read input and build (**) komment
-                * */
-               
+                             
                 if (!isIndexOutOfRange(index + 1, input)) {
                     if (input.at(index + 1) == '*') {
                         std::string lexema = "";
@@ -96,7 +91,7 @@ public:
                                 if (!isIndexOutOfRange(index + 1, input)) {
                                     if (input.at(index + 1) == ')') {
 
-                                        resultTable.push_back(TableRow(std::string("(**)komment"), lexema));
+                                        resultTable.push_back(TableRow(std::string("<(**)kommentar>"), lexema));
                                         statePosition = 1;
                                         index++;
                                         break;
@@ -117,43 +112,34 @@ public:
                 if (!isIndexOutOfRange(index + 1, input)) {
                     if (input.at(index + 1) == '=') {
 
-                        resultTable.push_back(TableRow(std::string("ertekadas"), std::string("=")));
+                        resultTable.push_back(TableRow(std::string("<ertekadasjel>"), std::string(":=")));
                         statePosition = 1;
                         index += 2;
                     }
                     else {
                         statePosition = 19;
-                     
                     }
                 }
                 else {
                     statePosition = 19;
                 }
-
                 break;
             }
             case 15: {
                 if (!isIndexOutOfRange(index + 1, input)) {
                     if (input.at(index + 1) == '=') {
-                        resultTable.push_back(TableRow(std::string("kisebbegyenlo"), std::string("<=")));
+                        resultTable.push_back(TableRow(std::string("<kisebbegyenlo>"), std::string("<=")));
                         statePosition = 1;
                         index += 2;
                     }
                     else if (input.at(index+1) == '>') {
-                        resultTable.push_back(TableRow(std::string("nemegyenlo"), std::string("<>")));
+                        resultTable.push_back(TableRow(std::string("<nemegyenlo>"), std::string("<>")));
                         statePosition = 1;
                         index += 2;
                     }
-                    else if (isdigit(input.at(index + 1)) || isLetter(input.at(index + 1))) {
-                        resultTable.push_back(TableRow(std::string("kisebb"), std::string("<")));
-                        statePosition = 1;
-                        index++;
-                    }
                     else {
                         statePosition = 19;
-                       
                     }
-                   
                 }
                 else {
                     statePosition = 19;
@@ -164,19 +150,13 @@ public:
             case 18: {
                 if (!isIndexOutOfRange(index + 1, input)) {
                     if (input.at(index + 1) == '=') {
-                        resultTable.push_back(TableRow(std::string("nagyobbegyenlo"), std::string(">=")));
+                        resultTable.push_back(TableRow(std::string("<nagyobbegyenlo>"), std::string(">=")));
                         statePosition = 1;
                         index += 2;
-                    }
-                    else if(isdigit(input.at(index + 1)) || isLetter(input.at(index + 1))) {
-                        resultTable.push_back(TableRow(std::string("nagyobb"), std::string(">")));
-                        statePosition = 1;
-                        index++;
                     }
                     else {
                         statePosition = 19;
                     }
-
                 }
                 else {
                     statePosition = 19;
@@ -185,24 +165,32 @@ public:
                 break;
             }
             case 19: {
-                resultTable.push_back(TableRow(std::string("error at char: "+to_string(index+1)), std::string(1, input.at(index))));
+                std::string errorMessage = std::string("at index: ");
+                std::string errorIndex = to_string(index);
+                errorMessage.append(errorIndex);
+                std::string errorValue = std::string(1,input.at(index));
+                errorTable.push_back(TableRow(errorMessage, errorValue));
                 statePosition = 1;
                 index++;
                 break;
             }
+            
                
             }
 
-            //CHECK the string end
             if (isIndexOutOfRange(index, input)) {
                 statePosition = 21;
             }
-        } while (statePosition < 21);
+        } while (statePosition != 21);
         
     }
 
     std::vector<TableRow> getResultTable() {
         return this->resultTable;
+    }
+
+    std::vector<TableRow> getErrorTable() {
+        return this->errorTable;
     }
 
 
@@ -211,6 +199,7 @@ public:
 
      void initState() {
          this->resultTable.clear();
+         this->errorTable.clear();
      }
 
      int calculcateStatePosition(char inputChar) {
@@ -218,7 +207,9 @@ public:
          if (isdigit(inputChar)) {
              statePosition = 4;
          }
-
+         if (inputChar == '$') {
+             statePosition = 21;
+         }
          else if (isLetter(inputChar)) {
              statePosition = 2;
          }
@@ -267,6 +258,9 @@ public:
             }
         }
         return false;
+    }
+    bool isLetterOrDigit(char c) {
+        return isLetter(c) || isdigit(c);
     }
 
 
