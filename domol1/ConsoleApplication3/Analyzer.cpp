@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <string>
+#include <algorithm>
 using namespace std;
 
 class Analyzer
