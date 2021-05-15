@@ -62,7 +62,7 @@ class CYK {
     CYK(){
 
     }
-    CYK( std::vector<std::vector<std::string>> grammer){
+    CYK( std::vector<std::vector<std::string> > grammer){
         this->grammer = grammer;
     }
 	bool analyze(std::string str){
